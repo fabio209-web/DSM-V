@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroScreen Pro - Evaluación TEA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/recharts@3.4.1/umd/Recharts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        .slide-in-from-right {
+            animation: slideInFromRight 0.3s ease-out;
+        }
+        .zoom-in {
+            animation: zoomIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInFromRight {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .animate-pulse-once {
+            animation: pulse 1.5s ease-in-out;
+        }
+        .print-only {
+            display: none;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-visible, .print-visible * {
+                visibility: visible;
+            }
+            .print-visible {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block;
+            }
+        }
+        .nav-button {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            min-width: 4.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            color: rgb(100, 116, 139);
+        }
+        .nav-button:hover {
+            background-color: rgb(241, 245, 249);
+            color: rgb(79, 70, 229);
+        }
+        .nav-button.active {
+            background-color: rgb(79, 70, 229);
+            color: white;
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .warning-indicator {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            width: 0.625rem;
+            height: 0.625rem;
+            background-color: rgb(245, 158, 11);
+            border-radius: 9999px;
+            animation: pulse 2s infinite;
+            border: 2px solid white;
+            box-sizing: content-box;
+        }
+        .hidden {
+            display: none;
+        }
+        
+        /* CORRECCIÓN: Espacio adicional significativo para el botón de imprimir */
+        .print-button-container {
+            margin-bottom: 8rem !important; /* Espacio extra significativo */
+            position: relative;
+            z-index: 40;
+            padding-top: 2rem;
+        }
+        
+        /* CORRECCIÓN: Ajuste del padding inferior del contenido principal */
+        .main-content {
+            padding-bottom: 10rem !important; /* Más espacio en la parte inferior */
+        }
+        
+        /* CORRECCIÓN: Asegurar que la sección de referral tenga suficiente espacio */
+        #referral {
+            min-height: calc(100vh - 200px);
+            padding-bottom: 8rem;
+        }
+        
+        /* CORRECCIÓN: Ajustar la posición de la barra de navegación */
+        .nav-dock {
+            bottom: 1.5rem; /* Subir un poco la barra */
+            height: auto;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="app">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-20 no-print">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-xl text-indigo-900">
+                    <i class="fas fa-brain text-indigo-600"></i>
+                    <span>NeuroScreen<span class="text-indigo-600">Pro</span></span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-slate-500 hidden md:block">
+                        Basado en DSM-5
+                    </div>
+                    <button 
+                        type="button"
+                        id="reset-button"
+                        class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors"
+                        title="Borrar datos y comenzar nueva evaluación"
+                    >
+                        <i class="fas fa-redo-alt"></i>
+                        <span class="hidden sm:inline">Nueva Evaluación</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content - CORREGIDO: Añadida clase main-content -->
+        <main class="container mx-auto px-4 py-8 main-content">
+            <div id="progress-bar" class="no-print"></div>
+            
+            <!-- Introduction Section -->
+            <div id="introduction" class="section">
+                <div class="animate-in fade-in duration-500 max-w-3xl mx-auto">
+                    <div class="text-center mb-10">
+                        <div class="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-full mb-4">
+                            <i class="fas fa-brain text-indigo-600 text-4xl"></i>
+                        </div>
+                        <!-- ACTUALIZADO: Encabezado cambiado -->
+                        <h1 class="text-4xl font-bold text-slate-900 mb-3">Evaluación de Trastorno del Espectro Autista (TEA)</h1>
+                        <p class="text-lg text-slate-600">Herramienta de cribado basada en los criterios del DSM-5</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                            <div class="bg-blue-50 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-comments text-blue-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-slate-800 mb-2">Comunicación Social</h3>
+                            <p class="text-sm text-slate-500">Evalúa reciprocidad, comunicación no verbal y relaciones.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                            <div class="bg-purple-50 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-redo-alt text-purple-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-slate-800 mb-2">Conducta Repetitiva</h3>
+                            <p class="text-sm text-slate-500">Evalúa estereotipias, rutinas e intereses restringidos.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                            <div class="bg-teal-50 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                                <i class="fas fa-file-alt text-teal-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-slate-800 mb-2">Informe Clínico</h3>
+                            <p class="text-sm text-slate-500">Generación automática de carta de derivación neurológica.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-6 flex gap-4 items-start">
+                        <i class="fas fa-info-circle text-amber-600 flex-shrink-0 mt-1"></i>
+                        <div>
+                            <h4 class="font-semibold text-amber-800 mb-1">Aviso Legal Importante</h4>
+                            <p class="text-sm text-amber-700">
+                                Esta herramienta es de apoyo al cribado clínico y <strong>no sustituye el diagnóstico médico</strong>. 
+                                El diagnóstico de TEA requiere una evaluación multidisciplinaria exhaustiva.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex justify-center">
+                        <button 
+                            id="start-assessment"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg shadow-indigo-200 transition-all flex items-center gap-2"
+                        >
+                            Comenzar Evaluación <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Assessment Section -->
+            <div id="social" class="section hidden">
+                <!-- Content will be dynamically generated -->
+            </div>
+
+            <!-- Behavior Assessment Section -->
+            <div id="behavior" class="section hidden">
+                <!-- Content will be dynamically generated -->
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="section hidden">
+                <!-- Content will be dynamically generated -->
+            </div>
+
+            <!-- Referral Section - CORREGIDO: Añadido ID específico -->
+            <div id="referral" class="section hidden">
+                <!-- Content will be dynamically generated -->
+            </div>
+
+            <!-- Reference Section -->
+            <div id="reference" class="section hidden">
+                <!-- Content will be dynamically generated -->
+            </div>
+        </main>
+
+        <!-- Navigation Dock - CORREGIDO: Añadida clase nav-dock -->
+        <div class="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none no-print nav-dock">
+            <div class="bg-white/90 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl p-2 flex gap-1 pointer-events-auto">
+                <button class="nav-button active" data-section="introduction">
+                    <i class="fas fa-brain"></i>
+                    <span class="text-[10px] font-medium mt-1">Inicio</span>
+                </button>
+                <button class="nav-button" data-section="social">
+                    <i class="fas fa-comments"></i>
+                    <span class="text-[10px] font-medium mt-1">Social</span>
+                </button>
+                <button class="nav-button" data-section="behavior">
+                    <i class="fas fa-redo-alt"></i>
+                    <span class="text-[10px] font-medium mt-1">Conducta</span>
+                </button>
+                <div class="w-px bg-slate-200 mx-1 my-2"></div>
+                <button class="nav-button" data-section="results">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="text-[10px] font-medium mt-1">Resultados</span>
+                </button>
+                <button class="nav-button" data-section="referral">
+                    <i class="fas fa-print"></i>
+                    <span class="text-[10px] font-medium mt-1">Informe</span>
+                </button>
+                <button class="nav-button" data-section="reference">
+                    <i class="fas fa-book-open"></i>
+                    <span class="text-[10px] font-medium mt-1">DSM-5</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants and Data - RESTAURADO: Todas las preguntas completas
+        const SOCIAL_QUESTIONS = [
+            { 
+                id: 0, 
+                category: 'social', 
+                subsection: 'Reciprocidad Socioemocional', 
+                text: "Presenta deficiencias en la reciprocidad socioemocional",
+                explanation: "Es la dificultad para el 'ida y vuelta' en la interacción social. No responde cuando se le busca ni intenta conectar con otros de forma natural.",
+                examples: [
+                    "No responde cuando le hablas o lo llamas por su nombre.",
+                    "Si le sonríes, no te devuelve la sonrisa.",
+                    "No se acerca a mostrarte un juguete o algo que le gustó."
+                ]
+            },
+            { 
+                id: 1, 
+                category: 'social', 
+                subsection: 'Reciprocidad Socioemocional', 
+                text: "Muestra dificultad para iniciar o responder a interacciones sociales",
+                explanation: "Le cuesta acercarse a otros para jugar o platicar, y a menudo ignora cuando otros intentan acercarse a él.",
+                examples: [
+                    "Prefiere jugar solo en un rincón aunque haya otros niños.",
+                    "No pide ayuda aunque la necesite (trata de hacerlo todo solo).",
+                    "Parece estar 'en su propio mundo'."
+                ]
+            },
+            { 
+                id: 2, 
+                category: 'social', 
+                subsection: 'Reciprocidad Socioemocional', 
+                text: "Tiene poco interés en compartir emociones, intereses o logros con otros",
+                explanation: "No busca a sus padres u otros para compartir su alegría, sorpresas o cosas que le llaman la atención.",
+                examples: [
+                    "Si construye una torre alta, no te mira para ver tu reacción.",
+                    "No señala con el dedo para mostrarte un avión o un perro.",
+                    "No corre a abrazarte si se lastima o está feliz."
+                ]
+            },
+            { 
+                id: 3, 
+                category: 'social', 
+                subsection: 'Reciprocidad Socioemocional', 
+                text: "Presenta dificultad para mantener conversaciones bidireccionales",
+                explanation: "Aunque hable, le cuesta mantener una charla de 'ida y vuelta'. Puede que solo hable de lo que él quiere o no responda a lo que tú dices.",
+                examples: [
+                    "Si le preguntas '¿cómo estás?', responde con algo no relacionado (ej. 'el tren es azul').",
+                    "Solo repite frases de películas en lugar de contestar.",
+                    "Habla mucho sobre su tema favorito sin dejarte participar."
+                ]
+            },
+            { 
+                id: 4, 
+                category: 'social', 
+                subsection: 'Reciprocidad Socioemocional', 
+                text: "Parece tener poco interés en hacer amigos o establecer relaciones sociales",
+                explanation: "Muestra indiferencia hacia otros niños o personas de su edad. No parece entender el concepto de 'amigo'.",
+                examples: [
+                    "En el parque, ignora a los otros niños.",
+                    "No pregunta por sus compañeros de clase ni menciona nombres.",
+                    "Trata a las personas como si fueran objetos o herramientas para conseguir algo."
+                ]
+            },
+            { 
+                id: 5, 
+                category: 'social', 
+                subsection: 'Comunicación No Verbal', 
+                text: "Presenta deficiencias en las conductas comunicativas no verbales",
+                explanation: "No utiliza gestos, miradas o expresiones faciales para comunicarse de manera efectiva.",
+                examples: [
+                    "No dice adiós con la mano.",
+                    "No asiente ni niega con la cabeza.",
+                    "Su cara parece inexpresiva la mayor parte del tiempo."
+                ]
+            },
+            { 
+                id: 6, 
+                category: 'social', 
+                subsection: 'Comunicación No Verbal', 
+                text: "Tiene anomalías en el contacto visual",
+                explanation: "Su forma de mirar a los ojos es inusual: o no mira en absoluto, o mira fijamente de forma incómoda.",
+                examples: [
+                    "Te mira a la boca o a las manos en lugar de a los ojos cuando hablas.",
+                    "Parece mirar 'a través' de ti.",
+                    "Desvía la mirada inmediatamente si intentas mirarlo."
+                ]
+            },
+            { 
+                id: 7, 
+                category: 'social', 
+                subsection: 'Comunicación No Verbal', 
+                text: "Tiene dificultades con el lenguaje corporal o gestos comunicativos",
+                explanation: "No entiende ni usa los gestos comunes que usamos al hablar.",
+                examples: [
+                    "No entiende si le señalas dónde está un objeto (mira tu dedo en vez del objeto).",
+                    "No usa las manos para explicar el tamaño de algo.",
+                    "Su postura corporal es rígida o extraña al interactuar."
+                ]
+            },
+            { 
+                id: 8, 
+                category: 'social', 
+                subsection: 'Comunicación No Verbal', 
+                text: "Muestra expresión facial limitada o atípica",
+                explanation: "Su cara no refleja sus emociones o lo que está diciendo.",
+                examples: [
+                    "Dice que está feliz con una cara totalmente seria.",
+                    "Se ríe en momentos inapropiados (ej. cuando alguien llora).",
+                    "Tiene una expresión 'plana' o vacía casi siempre."
+                ]
+            },
+            { 
+                id: 9, 
+                category: 'social', 
+                subsection: 'Comunicación No Verbal', 
+                text: "Tiene problemas para coordinar comunicación verbal y no verbal",
+                explanation: "Lo que dice no concuerda con sus gestos o mirada.",
+                examples: [
+                    "Te habla sin mirarte en absoluto.",
+                    "Hace gestos que no tienen nada que ver con lo que está diciendo.",
+                    "Parece un 'robot' al hablar, sin mover el cuerpo naturalmente."
+                ]
+            },
+            { 
+                id: 10, 
+                category: 'social', 
+                subsection: 'Relaciones Sociales', 
+                text: "Presenta prosodia (entonación) atípica o monótona",
+                explanation: "Su forma de hablar suena extraña en ritmo, tono o volumen.",
+                examples: [
+                    "Habla con un tono muy agudo, como de caricatura.",
+                    "Suena monótono, como un contestador automático o robot.",
+                    "Habla demasiado fuerte o susurra sin razón aparente."
+                ]
+            },
+            { 
+                id: 11, 
+                category: 'social', 
+                subsection: 'Relaciones Sociales', 
+                text: "Presenta deficiencias en el desarrollo y mantenimiento de relaciones",
+                explanation: "Le cuesta hacer amigos, mantenerlos o entender en qué consiste la amistad según su edad.",
+                examples: [
+                    "Quiere jugar con otros pero es muy brusco o mandón y los aleja.",
+                    "No entiende que los juegos tienen reglas y turnos.",
+                    "Prefiere estar con adultos antes que con niños de su edad."
+                ]
+            },
+            { 
+                id: 12, 
+                category: 'social', 
+                subsection: 'Relaciones Sociales', 
+                text: "Tiene dificultad para ajustar el comportamiento a diferentes contextos",
+                explanation: "Se comporta igual en una biblioteca que en un parque; no adapta su conducta según el lugar.",
+                examples: [
+                    "Grita en lugares donde se requiere silencio (ej. iglesia, cine).",
+                    "Habla con desconocidos de forma demasiado familiar o invasiva.",
+                    "Se ríe si alguien se cae o se lastima."
+                ]
+            },
+            { 
+                id: 13, 
+                category: 'social', 
+                subsection: 'Relaciones Sociales', 
+                text: "Presenta problemas para entender normas sociales implícitas",
+                explanation: "No capta las reglas no escritas de la convivencia social.",
+                examples: [
+                    "Se acerca demasiado a la cara de las personas (invade espacio personal).",
+                    "Hace preguntas incómodas en público ('¿por qué ese señor es gordo?').",
+                    "No entiende cuándo una conversación ha terminado."
+                ]
+            },
+            { 
+                id: 14, 
+                category: 'social', 
+                subsection: 'Relaciones Sociales', 
+                text: "Muestra interés limitado en juegos imaginativos o cooperativos",
+                explanation: "Le cuesta jugar a 'hacer como si...' (juego simbólico) o jugar en equipo.",
+                examples: [
+                    "Alinea los carritos en vez de jugar a que corren carreras.",
+                    "No juega a 'la casita', 'superhéroes' o a darle de comer a muñecos.",
+                    "No entiende juegos de persecución o escondidas."
+                ]
+            }
+        ];
+
+        const BEHAVIOR_QUESTIONS = [
+            { 
+                id: 0, 
+                category: 'behavior', 
+                subsection: 'Estereotipias', 
+                text: "Presenta movimientos, utilización de objetos o habla estereotipados",
+                explanation: "Realiza acciones repetitivas sin un propósito funcional claro.",
+                examples: [
+                    "Sacude las manos o dedos frente a sus ojos.",
+                    "Abre y cierra puertas repetidamente.",
+                    "Repite sonidos o ruidos constantemente."
+                ]
+            },
+            { 
+                id: 1, 
+                category: 'behavior', 
+                subsection: 'Estereotipias', 
+                text: "Realiza estereotipias motoras simples",
+                explanation: "Movimientos del cuerpo repetitivos que parecen auto-estimulantes.",
+                examples: [
+                    "Aleteo de manos (flapping) cuando está emocionado.",
+                    "Caminar de puntillas frecuentemente.",
+                    "Balanceo del cuerpo hacia adelante y atrás."
+                ]
+            },
+            { 
+                id: 2, 
+                category: 'behavior', 
+                subsection: 'Estereotipias', 
+                text: "Utiliza objetos de manera repetitiva",
+                explanation: "No usa los juguetes para lo que sirven, sino para acciones repetitivas.",
+                examples: [
+                    "Gira las ruedas de un cochecito por horas en vez de hacerlo rodar.",
+                    "Alinea juguetes por color o tamaño obsesivamente.",
+                    "Tira objetos al suelo solo para ver cómo caen o escuchar el ruido."
+                ]
+            },
+            { 
+                id: 3, 
+                category: 'behavior', 
+                subsection: 'Estereotipias', 
+                text: "Muestra habla repetitiva (ecolalia)",
+                explanation: "Repite palabras, frases o diálogos completos fuera de contexto.",
+                examples: [
+                    "Repite inmediatamente lo que le acabas de preguntar ('ecolalia inmediata').",
+                    "Recita diálogos completos de dibujos animados en momentos que no vienen al caso.",
+                    "Inventa palabras o sonidos que repite constantemente."
+                ]
+            },
+            { 
+                id: 4, 
+                category: 'behavior', 
+                subsection: 'Rutinas', 
+                text: "Insiste en la monotonía y excesiva inflexibilidad de rutinas",
+                explanation: "Necesita que las cosas sucedan siempre de la misma manera y en el mismo orden.",
+                examples: [
+                    "Se altera si cambias la ruta para ir a la escuela.",
+                    "Tiene que bañarse, vestirse o comer siguiendo pasos muy estrictos.",
+                    "Se molesta si cambias los muebles de lugar."
+                ]
+            },
+            { 
+                id: 5, 
+                category: 'behavior', 
+                subsection: 'Rutinas', 
+                text: "Presenta gran angustia frente a cambios pequeños",
+                explanation: "Reacciones desproporcionadas (llanto, gritos) ante modificaciones menores.",
+                examples: [
+                    "Explota en llanto si se le rompe una galleta.",
+                    "Se desespera si le cambias su plato o vaso favorito.",
+                    "Pánico si se cancela una salida planeada."
+                ]
+            },
+            { 
+                id: 6, 
+                category: 'behavior', 
+                subsection: 'Rutinas', 
+                text: "Tiene dificultades con las transiciones",
+                explanation: "Le cuesta mucho cambiar de una actividad a otra.",
+                examples: [
+                    "Llora o se tira al piso cuando es hora de dejar de jugar para comer.",
+                    "Le cuesta mucho salir de casa o entrar a la escuela.",
+                    "Necesita muchos avisos antes de cambiar de tarea."
+                ]
+            },
+            { 
+                id: 7, 
+                category: 'behavior', 
+                subsection: 'Rutinas', 
+                text: "Muestra pensamiento rígido",
+                explanation: "Interpreta todo de forma literal y le cuesta entender excepciones a las reglas.",
+                examples: [
+                    "No entiende bromas, sarcasmo o metáforas (ej. 'me muero de hambre').",
+                    "Corrige constantemente a otros si no siguen las reglas al pie de la letra.",
+                    "Le cuesta negociar o ceder en un juego."
+                ]
+            },
+            { 
+                id: 8, 
+                category: 'behavior', 
+                subsection: 'Rutinas', 
+                text: "Requiere seguir rituales específicos",
+                explanation: "Tiene que hacer ciertas cosas de una forma 'mágica' o específica para estar tranquilo.",
+                examples: [
+                    "Tiene que tocar cada farola al caminar por la calle.",
+                    "Tiene que cerrar y abrir la puerta 3 veces.",
+                    "Ordena la comida en el plato de una forma específica antes de comer."
+                ]
+            },
+            { 
+                id: 9, 
+                category: 'behavior', 
+                subsection: 'Rutinas', 
+                text: "Necesita comer los mismos alimentos (selectividad)",
+                explanation: "Extrema rigidez con la comida (texturas, colores, marcas).",
+                examples: [
+                    "Solo come alimentos de color beige o blanco.",
+                    "Rechaza comidas por su textura (purés, trozos).",
+                    "Solo come nuggets de una marca específica y nota si cambian."
+                ]
+            },
+            { 
+                id: 10, 
+                category: 'behavior', 
+                subsection: 'Intereses Restringidos', 
+                text: "Presenta intereses muy restringidos y fijos",
+                explanation: "Se obsesiona con temas u objetos específicos excluyendo todo lo demás.",
+                examples: [
+                    "Solo quiere hablar de dinosaurios, trenes o planetas.",
+                    "Se sabe todas las marcas y modelos de coches.",
+                    "No le interesan los juguetes de moda, solo su tema de interés."
+                ]
+            },
+            { 
+                id: 11, 
+                category: 'behavior', 
+                subsection: 'Intereses Restringidos', 
+                text: "Tiene fuerte apego o preocupación por objetos inusuales",
+                explanation: "Se encariña con objetos que no son juguetes.",
+                examples: [
+                    "Lleva consigo siempre una piedra, un trozo de cuerda o una tapa.",
+                    "Duerme con un objeto duro (ej. un coche de metal) en vez de un peluche.",
+                    "Se angustia si pierde su objeto inusual."
+                ]
+            },
+            { 
+                id: 12, 
+                category: 'behavior', 
+                subsection: 'Intereses Restringidos', 
+                text: "Dedica tiempo excesivo a temas específicos",
+                explanation: "Pasa horas investigando, ordenando o mirando cosas de su interés.",
+                examples: [
+                    "Pasa horas mirando mapas o google maps.",
+                    "Memoriza horarios de trenes o autobuses.",
+                    "Ve el mismo video clip una y otra vez."
+                ]
+            },
+            { 
+                id: 13, 
+                category: 'behavior', 
+                subsection: 'Intereses Restringidos', 
+                text: "Tiene conocimientos enciclopédicos sobre temas específicos",
+                explanation: "Sabe datos muy técnicos o detallados para su edad.",
+                examples: [
+                    "Sabe los nombres científicos de los dinosaurios a los 4 años.",
+                    "Conoce las capitales de todos los países.",
+                    "Recita el sistema solar con datos exactos de distancia."
+                ]
+            },
+            { 
+                id: 14, 
+                category: 'behavior', 
+                subsection: 'Intereses Restringidos', 
+                text: "Su conversación gira exclusivamente en torno a sus intereses",
+                explanation: "No importa de qué estén hablando los demás, él siempre vuelve a su tema.",
+                examples: [
+                    "Tratas de hablar del clima y él te habla de Minecraft.",
+                    "No detecta que el oyente está aburrido de escuchar sobre trenes.",
+                    "Hace preguntas sobre su tema solo para dar él la respuesta."
+                ]
+            },
+            { 
+                id: 15, 
+                category: 'behavior', 
+                subsection: 'Sensorial', 
+                text: "Presenta hiper- o hiporreactividad a los estímulos sensoriales",
+                explanation: "Reacciona de más o de menos a luces, sonidos, texturas u olores.",
+                examples: [
+                    "Se tapa los oídos con sonidos normales (licuadora, secador).",
+                    "No parece sentir frío y quiere ir sin abrigo en invierno.",
+                    "Huele todo lo que encuentra."
+                ]
+            },
+            { 
+                id: 16, 
+                category: 'behavior', 
+                subsection: 'Sensorial', 
+                text: "Muestra sensibilidad extrema a sonidos específicos",
+                explanation: "Ciertos ruidos le causan dolor o angustia real.",
+                examples: [
+                    "Llora con el ruido de la aspiradora o el secador de manos.",
+                    "Escucha sonidos lejanos que otros no notan.",
+                    "Le asustan los globos por si explotan."
+                ]
+            },
+            { 
+                id: 17, 
+                category: 'behavior', 
+                subsection: 'Sensorial', 
+                text: "Tiene aversión a ciertas texturas de ropa o alimentos",
+                explanation: "Le molesta físicamente el contacto con ciertos materiales.",
+                examples: [
+                    "No soporta las etiquetas de la ropa o ciertas telas.",
+                    "No le gusta caminar descalzo sobre arena o pasto.",
+                    "Le dan arcadas ciertas texturas de comida (gelatinas, purés)."
+                ]
+            },
+            { 
+                id: 18, 
+                category: 'behavior', 
+                subsection: 'Sensorial', 
+                text: "Busca estímulos sensoriales intensos",
+                explanation: "Parece tener 'hambre' de sensaciones fuertes.",
+                examples: [
+                    "Se pega objetos contra el cuerpo.",
+                    "Mira luces parpadeantes o ventiladores girando fijamente.",
+                    "Le gusta dar vueltas sobre sí mismo hasta marearse."
+                ]
+            },
+            { 
+                id: 19, 
+                category: 'behavior', 
+                subsection: 'Sensorial', 
+                text: "Muestra indiferencia al dolor o temperatura",
+                explanation: "Parece no sentir dolor o frío/calor como los demás.",
+                examples: [
+                    "Se cae fuerte y no llora.",
+                    "Se lastima y no busca consuelo ni se queja.",
+                    "Quiere usar manga larga en pleno verano."
+                ]
+            }
+        ];
+
+        // Application State
+        let activeSection = 'introduction';
+        let responses = {};
+        let patientInfo = {
+            name: '',
+            age: '',
+            gender: '',
+            evaluator: '',
+            date: new Date().toLocaleDateString('es-ES')
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up event listeners
+            document.getElementById('start-assessment').addEventListener('click', function() {
+                setActiveSection('social');
+            });
+            
+            document.getElementById('reset-button').addEventListener('click', handleReset);
+            
+            // Set up navigation buttons
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    setActiveSection(section);
+                });
+            });
+            
+            renderProgressBar();
+            updateNavigation();
+        });
+
+        // Section Navigation
+        function setActiveSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show active section
+            document.getElementById(section).classList.remove('hidden');
+            
+            // Update active section
+            activeSection = section;
+            
+            // Render section content if needed
+            if (section === 'social' || section === 'behavior') {
+                renderAssessment(section);
+            } else if (section === 'results') {
+                renderResults();
+            } else if (section === 'referral') {
+                renderReferral();
+            } else if (section === 'reference') {
+                renderReference();
+            }
+            
+            // Update navigation and progress bar
+            updateNavigation();
+            renderProgressBar();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateNavigation() {
+            // Update active nav button
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const activeNav = document.querySelector(`.nav-button[data-section="${activeSection}"]`);
+            if (activeNav) {
+                activeNav.classList.add('active');
+            }
+            
+            // Update warning indicators
+            const risk = calculateRiskAssessment();
+            
+            // Social section warning
+            const socialNav = document.querySelector('.nav-button[data-section="social"]');
+            if (risk.socialMissing > 0) {
+                if (!socialNav.querySelector('.warning-indicator')) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'warning-indicator';
+                    socialNav.appendChild(indicator);
+                }
+            } else {
+                const indicator = socialNav.querySelector('.warning-indicator');
+                if (indicator) indicator.remove();
+            }
+            
+            // Behavior section warning
+            const behaviorNav = document.querySelector('.nav-button[data-section="behavior"]');
+            if (risk.behaviorMissing > 0) {
+                if (!behaviorNav.querySelector('.warning-indicator')) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'warning-indicator';
+                    behaviorNav.appendChild(indicator);
+                }
+            } else {
+                const indicator = behaviorNav.querySelector('.warning-indicator');
+                if (indicator) indicator.remove();
+            }
+            
+            // Results section warning
+            const resultsNav = document.querySelector('.nav-button[data-section="results"]');
+            if (!risk.isComplete) {
+                if (!resultsNav.querySelector('.warning-indicator')) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'warning-indicator';
+                    resultsNav.appendChild(indicator);
+                }
+            } else {
+                const indicator = resultsNav.querySelector('.warning-indicator');
+                if (indicator) indicator.remove();
+            }
+        }
+
+        function renderProgressBar() {
+            if (activeSection === 'introduction') {
+                document.getElementById('progress-bar').innerHTML = '';
+                return;
+            }
+            
+            const risk = calculateRiskAssessment();
+            const totalQ = SOCIAL_QUESTIONS.length + BEHAVIOR_QUESTIONS.length;
+            const answeredQ = totalQ - risk.socialMissing - risk.behaviorMissing;
+            const percentage = Math.round((answeredQ / totalQ) * 100);
+            
+            document.getElementById('progress-bar').innerHTML = `
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6 no-print">
+                    <div 
+                        class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-out" 
+                        style="width: ${percentage}%"
+                    ></div>
+                    <p class="text-xs text-gray-500 text-right mt-1">${percentage}% Completado</p>
+                </div>
+            `;
+        }
+
+        // Assessment Functions
+        function renderAssessment(type) {
+            const questions = type === 'social' ? SOCIAL_QUESTIONS : BEHAVIOR_QUESTIONS;
+            const risk = calculateRiskAssessment();
+            const missing = type === 'social' ? risk.socialMissing : risk.behaviorMissing;
+            const missingIds = type === 'social' ? risk.missingSocialIds : risk.missingBehaviorIds;
+            const colorClass = type === 'social' ? 'text-blue-600' : 'text-purple-600';
+            const bgClass = type === 'social' ? 'bg-blue-50' : 'bg-purple-50';
+            
+            let questionsHTML = '';
+            questions.forEach(q => {
+                const value = responses[`${type}-${q.id}`];
+                questionsHTML += `
+                    <div class="assessment-card p-4 rounded-xl border transition-all duration-200 ${
+                        value === 'yes' ? 'bg-teal-50 border-teal-200' : 
+                        value === 'no' ? 'bg-slate-50 border-slate-200' : 'bg-white border-gray-200 hover:border-blue-300 shadow-sm'
+                    }">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                                value ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700 ring-2 ring-amber-200 ring-offset-1'
+                            }">
+                                ${q.id + 1}
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-start mb-2 gap-4">
+                                    <p class="text-gray-900 font-semibold text-lg">${q.text}</p>
+                                    ${!value ? `
+                                        <span class="flex-shrink-0 inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            <span class="hidden sm:inline">Sin responder</span>
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                
+                                <button 
+                                    class="toggle-info flex items-center gap-1 text-indigo-600 text-sm font-medium mb-4 hover:text-indigo-800 transition-colors"
+                                    data-type="${type}"
+                                    data-id="${q.id}"
+                                >
+                                    <i class="fas fa-info-circle"></i>
+                                    <span class="info-text">¿Cómo identificar esto? (Ejemplos)</span>
+                                    <i class="fas fa-chevron-down chevron"></i>
+                                </button>
+
+                                <div class="info-section hidden bg-blue-50/80 border border-blue-100 rounded-lg p-4 mb-4">
+                                    <p class="text-slate-700 mb-3 font-medium leading-relaxed">
+                                        💡 ${q.explanation}
+                                    </p>
+                                    <div class="bg-white rounded border border-blue-100 p-3">
+                                        <span class="text-xs font-bold text-blue-600 uppercase tracking-wider block mb-2">Ejemplos cotidianos:</span>
+                                        <ul class="space-y-2">
+                                            ${q.examples.map(ex => `
+                                                <li class="flex items-start gap-2 text-sm text-slate-600">
+                                                    <span class="text-blue-400 mt-1">•</span>
+                                                    ${ex}
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-wrap gap-3">
+                                    <button
+                                        class="response-btn flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all flex-1 md:flex-none justify-center ${
+                                            value === 'yes' 
+                                            ? 'bg-teal-600 text-white shadow-md ring-2 ring-teal-600 ring-offset-1' 
+                                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700'
+                                        }"
+                                        data-type="${type}"
+                                        data-id="${q.id}"
+                                        data-value="yes"
+                                    >
+                                        <i class="fas ${value === 'yes' ? 'fa-check-circle' : 'fa-circle'}"></i>
+                                        Sí, coincide
+                                    </button>
+                                    <button
+                                        class="response-btn flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all flex-1 md:flex-none justify-center ${
+                                            value === 'no' 
+                                            ? 'bg-slate-600 text-white shadow-md ring-2 ring-slate-600 ring-offset-1' 
+                                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-100 hover:text-slate-800'
+                                        }"
+                                        data-type="${type}"
+                                        data-id="${q.id}"
+                                        data-value="no"
+                                    >
+                                        <i class="fas ${value === 'no' ? 'fa-times-circle' : 'fa-circle'}"></i>
+                                        No observado
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById(type).innerHTML = `
+                <div class="max-w-3xl mx-auto animate-in slide-in-from-right duration-300">
+                    <div class="mb-6">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium mb-2 ${bgClass} ${colorClass}">
+                            <i class="fas ${type === 'social' ? 'fa-comments' : 'fa-redo-alt'}"></i>
+                            Área ${type === 'social' ? '1' : '2'}
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-900">
+                            ${type === 'social' ? 'Comunicación e Interacción Social' : 'Patrones Restrictivos y Repetitivos'}
+                        </h2>
+                        <p class="text-slate-500 mt-1">
+                            Responda basándose en la observación clínica y el reporte de los cuidadores.
+                        </p>
+                    </div>
+
+                    ${missing > 0 ? `
+                        <div class="sticky top-20 z-10 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-amber-800 bg-amber-50/95 backdrop-blur px-5 py-3 rounded-xl border border-amber-200 shadow-md animate-pulse-once">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-amber-100 p-2 rounded-full text-amber-600">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm">Atención: Faltan ${missing} preguntas</p>
+                                    <p class="text-xs text-amber-700">
+                                        Revise los números: <span class="font-mono font-bold">${missingIds.join(', ')}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-xs font-medium bg-white/50 px-3 py-1 rounded-lg border border-amber-100">
+                                Sección incompleta
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="space-y-4 mb-20" id="questions-container">
+                        ${questionsHTML}
+                    </div>
+
+                    <div class="flex justify-end mb-12">
+                        ${type === 'social' ? `
+                            <button
+                                id="next-section"
+                                class="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition-colors"
+                            >
+                                Siguiente Sección: Conducta <i class="fas fa-arrow-right"></i>
+                            </button>
+                        ` : `
+                            <button
+                                id="view-results"
+                                class="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                            >
+                                Ver Resultados <i class="fas fa-file-alt"></i>
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners for the new buttons
+            if (type === 'social') {
+                document.getElementById('next-section').addEventListener('click', function() {
+                    setActiveSection('behavior');
+                });
+            } else {
+                document.getElementById('view-results').addEventListener('click', function() {
+                    setActiveSection('results');
+                });
+            }
+            
+            // Add event listeners for toggle info buttons
+            document.querySelectorAll('.toggle-info').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const id = this.getAttribute('data-id');
+                    toggleInfo(type, id, this);
+                });
+            });
+            
+            // Add event listeners for response buttons
+            document.querySelectorAll('.response-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const id = this.getAttribute('data-id');
+                    const value = this.getAttribute('data-value');
+                    handleResponse(type, id, value);
+                });
+            });
+        }
+
+        function toggleInfo(type, id, buttonElement) {
+            const questionElement = buttonElement.closest('.assessment-card');
+            const infoSection = questionElement.querySelector('.info-section');
+            const chevron = buttonElement.querySelector('.chevron');
+            const infoText = buttonElement.querySelector('.info-text');
+            
+            if (infoSection.classList.contains('hidden')) {
+                infoSection.classList.remove('hidden');
+                chevron.classList.remove('fa-chevron-down');
+                chevron.classList.add('fa-chevron-up');
+                infoText.textContent = 'Ocultar explicación y ejemplos';
+            } else {
+                infoSection.classList.add('hidden');
+                chevron.classList.remove('fa-chevron-up');
+                chevron.classList.add('fa-chevron-down');
+                infoText.textContent = '¿Cómo identificar esto? (Ejemplos)';
+            }
+        }
+
+        function handleResponse(type, questionId, value) {
+            const key = `${type}-${questionId}`;
+            responses[key] = value;
+            
+            // Re-render the current section to update UI
+            if (activeSection === 'social' || activeSection === 'behavior') {
+                renderAssessment(activeSection);
+            }
+            
+            // Update navigation and progress
+            updateNavigation();
+            renderProgressBar();
+        }
+
+        // Results Functions
+        function calculateRiskAssessment() {
+            let socialCount = 0;
+            let behaviorCount = 0;
+            const socialMissingIds = [];
+            const behaviorMissingIds = [];
+
+            SOCIAL_QUESTIONS.forEach(q => {
+                const val = responses[`social-${q.id}`];
+                if (val === 'yes') socialCount++;
+                if (!val) socialMissingIds.push(q.id + 1);
+            });
+
+            BEHAVIOR_QUESTIONS.forEach(q => {
+                const val = responses[`behavior-${q.id}`];
+                if (val === 'yes') behaviorCount++;
+                if (!val) behaviorMissingIds.push(q.id + 1);
+            });
+
+            let riskLevel = 'bajo';
+            let recommendation = 'No se observan signos significativos de TEA según los criterios evaluados. Se sugiere continuar con controles pediátricos habituales.';
+
+            if ((socialCount >= 3 && behaviorCount >= 2) || (socialCount >= 4 && behaviorCount >= 1)) {
+                riskLevel = 'alto';
+                recommendation = 'Se observan múltiples signos consistentes con TEA (Grado potencial 2 o 3). Se recomienda derivación prioritaria a neurología infantil y evaluación ADOS-2.';
+            } else if ((socialCount >= 2 && behaviorCount >= 2) || (socialCount >= 3 && behaviorCount >= 1)) {
+                riskLevel = 'medio';
+                recommendation = 'Se observan algunos signos de alerta que podrían indicar TEA (Grado potencial 1) o trastornos de la comunicación social. Se recomienda evaluación por especialista.';
+            }
+
+            return {
+                riskLevel,
+                recommendation,
+                socialDeficits: socialCount,
+                repetitivePatterns: behaviorCount,
+                totalScore: socialCount + behaviorCount,
+                socialMissing: socialMissingIds.length,
+                behaviorMissing: behaviorMissingIds.length,
+                missingSocialIds: socialMissingIds,
+                missingBehaviorIds: behaviorMissingIds,
+                isComplete: socialMissingIds.length === 0 && behaviorMissingIds.length === 0
+            };
+        }
+
+        function renderResults() {
+            const risk = calculateRiskAssessment();
+            
+            document.getElementById('results').innerHTML = `
+                <div class="max-w-4xl mx-auto animate-in zoom-in duration-300">
+                    <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+                        <div class="text-center md:text-left">
+                            <h2 class="text-2xl font-bold text-slate-900">Resultados del Cribado</h2>
+                            <p class="text-slate-500">Resumen basado en los indicadores seleccionados</p>
+                        </div>
+                        <button 
+                            type="button"
+                            id="reset-from-results"
+                            class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+                        >
+                            <i class="fas fa-redo-alt"></i> Nueva Evaluación
+                        </button>
+                    </div>
+
+                    ${!risk.isComplete ? `
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
+                            <div class="flex items-start gap-4">
+                                <i class="fas fa-exclamation-triangle text-amber-600 flex-shrink-0 mt-1"></i>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-amber-900 text-lg mb-2">Evaluación Incompleta</h3>
+                                    <p class="text-amber-800 mb-4 text-sm">
+                                        Para obtener un resultado preciso, es necesario responder todas las preguntas. 
+                                    </p>
+                                    <div class="grid sm:grid-cols-2 gap-4">
+                                        ${risk.socialMissing > 0 ? `
+                                            <button 
+                                                id="go-to-social"
+                                                class="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition-colors text-sm font-medium group"
+                                            >
+                                                <div class="text-left">
+                                                    <span class="block font-bold">Área Social</span>
+                                                    <span class="text-xs text-amber-600">Pendientes: ${risk.missingSocialIds.join(', ')}</span>
+                                                </div>
+                                                <i class="fas fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </button>
+                                        ` : ''}
+                                        ${risk.behaviorMissing > 0 ? `
+                                            <button 
+                                                id="go-to-behavior"
+                                                class="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition-colors text-sm font-medium group"
+                                            >
+                                                <div class="text-left">
+                                                    <span class="block font-bold">Área Conductual</span>
+                                                    <span class="text-xs text-amber-600">Pendientes: ${risk.missingBehaviorIds.join(', ')}</span>
+                                                </div>
+                                                <i class="fas fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="grid md:grid-cols-2 gap-6 mb-8">
+                        <div class="p-8 rounded-2xl shadow-lg text-white relative overflow-hidden transition-all duration-500 ${
+                            risk.riskLevel === 'alto' ? 'bg-gradient-to-br from-rose-500 to-red-600' : 
+                            risk.riskLevel === 'medio' ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 
+                            'bg-gradient-to-br from-emerald-500 to-green-600'
+                        }">
+                            <div class="relative z-10">
+                                <h3 class="text-lg font-medium opacity-90 mb-1">Nivel de Riesgo Estimado</h3>
+                                <div class="text-4xl font-bold mb-4 tracking-tight">${risk.riskLevel.toUpperCase()}</div>
+                                <p class="text-sm opacity-95 leading-relaxed border-t border-white/20 pt-4">
+                                    ${risk.recommendation}
+                                </p>
+                            </div>
+                            <div class="absolute -right-10 -bottom-10 opacity-20">
+                                <i class="fas fa-brain text-6xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-6">Distribución de Síntomas</h3>
+                            <div class="h-64 w-full flex items-center justify-center bg-slate-50 rounded-lg">
+                                <div class="text-center text-slate-500">
+                                    <i class="fas fa-chart-pie text-4xl mb-2"></i>
+                                    <p>Gráfico de distribución</p>
+                                    <p class="text-sm">(En una implementación completa, se mostraría un gráfico real)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
+                        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="font-semibold text-slate-800">Desglose por Criterios DSM-5</h3>
+                        </div>
+                        <div class="divide-y divide-slate-100">
+                            <div class="p-6 flex items-start gap-4">
+                                <div class="mt-1 p-1 rounded-full ${risk.socialDeficits >= 3 ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}">
+                                    <i class="fas ${risk.socialDeficits >= 3 ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <h4 class="font-medium text-slate-900">Criterio A: Comunicación Social</h4>
+                                        <span class="text-sm font-bold px-2 py-0.5 rounded ${risk.socialDeficits >= 3 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}">
+                                            ${risk.socialDeficits}/15
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-slate-500">Se requiere la presencia de déficits persistentes en al menos 3 áreas para cumplir criterio clínico.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="p-6 flex items-start gap-4">
+                                <div class="mt-1 p-1 rounded-full ${risk.repetitivePatterns >= 2 ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}">
+                                    <i class="fas ${risk.repetitivePatterns >= 2 ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <h4 class="font-medium text-slate-900">Criterio B: Patrones Repetitivos</h4>
+                                        <span class="text-sm font-bold px-2 py-0.5 rounded ${risk.repetitivePatterns >= 2 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}">
+                                            ${risk.repetitivePatterns}/20
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-slate-500">Se requiere la presencia de al menos 2 manifestaciones para cumplir criterio clínico.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners for buttons in results
+            document.getElementById('reset-from-results').addEventListener('click', handleReset);
+            
+            if (!risk.isComplete) {
+                if (risk.socialMissing > 0) {
+                    document.getElementById('go-to-social').addEventListener('click', function() {
+                        setActiveSection('social');
+                    });
+                }
+                if (risk.behaviorMissing > 0) {
+                    document.getElementById('go-to-behavior').addEventListener('click', function() {
+                        setActiveSection('behavior');
+                    });
+                }
+            }
+        }
+
+        // Referral Functions - CORREGIDO: Añadido espacio significativo
+        function renderReferral() {
+            document.getElementById('referral').innerHTML = `
+                <div class="max-w-3xl mx-auto animate-in fade-in duration-300">
+                    <div class="bg-indigo-900 text-white p-8 rounded-t-2xl">
+                        <h2 class="text-2xl font-bold mb-2">Generador de Informe</h2>
+                        <p class="text-indigo-200 text-sm">Complete los datos para generar el documento oficial.</p>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-b-2xl shadow-lg">
+                        <div class="grid md:grid-cols-2 gap-6 mb-8">
+                            <div class="space-y-2">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Paciente</label>
+                                <input
+                                    type="text"
+                                    placeholder="Nombre completo"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-black placeholder:text-slate-400"
+                                    value="${patientInfo.name}"
+                                    id="patient-name"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Edad</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. 4 años 2 meses"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-black placeholder:text-slate-400"
+                                    value="${patientInfo.age}"
+                                    id="patient-age"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Sexo</label>
+                                <select
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-black"
+                                    id="patient-gender"
+                                >
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Masculino" ${patientInfo.gender === 'Masculino' ? 'selected' : ''}>Masculino</option>
+                                    <option value="Femenino" ${patientInfo.gender === 'Femenino' ? 'selected' : ''}>Femenino</option>
+                                </select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Evaluador</label>
+                                <input
+                                    type="text"
+                                    placeholder="Dr./Lic..."
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-black placeholder:text-slate-400"
+                                    value="${patientInfo.evaluator}"
+                                    id="patient-evaluator"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="relative group">
+                            <textarea
+                                readonly
+                                class="w-full h-96 p-6 font-mono text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none resize-none"
+                                id="referral-text"
+                            >${generateReferralLetter()}</textarea>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                    id="copy-button"
+                                    class="bg-white p-2 rounded shadow-sm hover:bg-gray-50 text-gray-600 border"
+                                    title="Copiar"
+                                >
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CORRECCIÓN: Añadido espacio significativo antes del botón -->
+                        <div class="h-16"></div>
+                        
+                        <div class="mt-6 flex gap-4 print-button-container">
+                            <button
+                                id="print-button"
+                                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                            >
+                                <i class="fas fa-print"></i> Imprimir / Guardar PDF
+                            </button>
+                        </div>
+                        
+                        <!-- CORRECCIÓN: Añadido espacio adicional después del botón -->
+                        <div class="h-24"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners for referral section
+            document.getElementById('patient-name').addEventListener('input', function() {
+                patientInfo.name = this.value;
+                updateReferralText();
+            });
+            
+            document.getElementById('patient-age').addEventListener('input', function() {
+                patientInfo.age = this.value;
+                updateReferralText();
+            });
+            
+            document.getElementById('patient-gender').addEventListener('change', function() {
+                patientInfo.gender = this.value;
+                updateReferralText();
+            });
+            
+            document.getElementById('patient-evaluator').addEventListener('input', function() {
+                patientInfo.evaluator = this.value;
+                updateReferralText();
+            });
+            
+            document.getElementById('copy-button').addEventListener('click', copyToClipboard);
+            document.getElementById('print-button').addEventListener('click', printReferral);
+        }
+
+        function updateReferralText() {
+            document.getElementById('referral-text').value = generateReferralLetter();
+        }
+
+        function generateReferralLetter() {
+            const risk = calculateRiskAssessment();
+            const positiveSocial = SOCIAL_QUESTIONS.filter(q => responses[`social-${q.id}`] === 'yes');
+            const positiveBehavior = BEHAVIOR_QUESTIONS.filter(q => responses[`behavior-${q.id}`] === 'yes');
+
+            return `INFORME DE DERIVACIÓN - SOSPECHA DE TEA
+
+FECHA: ${patientInfo.date}
+PROFESIONAL EVALUADOR: ${patientInfo.evaluator}
+
+PACIENTE: ${patientInfo.name}
+EDAD: ${patientInfo.age}
+SEXO: ${patientInfo.gender}
+
+MOTIVO DE DERIVACIÓN:
+Evaluación neurológica completa por sospecha clínica de Trastorno del Espectro Autista (TEA) basada en screening DSM-5.
+
+RESUMEN DE HALLAZGOS CLÍNICOS:
+
+1. DOMINIO SOCIAL (Criterio A): ${risk.socialDeficits}/15 indicadores positivos.
+${positiveSocial.map(q => `- ${q.text}`).join('\n')}
+
+2. DOMINIO COMPORTAMENTAL (Criterio B): ${risk.repetitivePatterns}/20 indicadores positivos.
+${positiveBehavior.map(q => `- ${q.text}`).join('\n')}
+
+EVALUACIÓN DE RIESGO:
+Nivel de Riesgo: ${risk.riskLevel.toUpperCase()}
+Interpretación: ${risk.recommendation}
+
+RECOMENDACIONES SUGERIDAS:
+1. Evaluación diagnóstica confirmatoria (ADOS-2 / ADI-R).
+2. Evaluación de comorbilidades y nivel de desarrollo.
+3. Valoración por Terapia Ocupacional (Integración Sensorial).
+4. Valoración Fonoaudiológica.
+
+Atentamente,
+${patientInfo.evaluator || 'Profesional Tratante'}`;
+        }
+
+        function copyToClipboard() {
+            const textarea = document.getElementById('referral-text');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Texto copiado al portapapeles');
+        }
+
+        function printReferral() {
+            const originalContents = document.body.innerHTML;
+            const printContents = document.getElementById('referral').innerHTML;
+            
+            document.body.innerHTML = `
+                <div class="print-visible">
+                    <div class="bg-white p-8">
+                        <pre class="font-mono text-sm whitespace-pre-wrap">${generateReferralLetter()}</pre>
+                    </div>
+                </div>
+            `;
+            
+            window.print();
+            document.body.innerHTML = originalContents;
+            setActiveSection('referral'); // Restore the view
+        }
+
+        // Reference Functions
+        function renderReference() {
+            document.getElementById('reference').innerHTML = `
+                <div class="max-w-4xl mx-auto animate-in fade-in duration-300">
+                    <div class="bg-teal-900 text-white p-8 rounded-t-2xl">
+                        <h2 class="text-2xl font-bold">Referencia DSM-5</h2>
+                        <p class="text-teal-200">Criterios diagnósticos 299.00 (F84.0)</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-b-2xl shadow-lg space-y-8">
+                        <div class="border-l-4 border-blue-500 pl-4 py-1">
+                            <h3 class="font-bold text-slate-900">A. Comunicación Social</h3>
+                            <p class="text-slate-600 mt-1">Deficiencias persistentes en la comunicación social e interacción social en diversos contextos.</p>
+                        </div>
+                        <div class="border-l-4 border-purple-500 pl-4 py-1">
+                            <h3 class="font-bold text-slate-900">B. Patrones Repetitivos</h3>
+                            <p class="text-slate-600 mt-1">Patrones restrictivos y repetitivos de comportamiento, intereses o actividades.</p>
+                        </div>
+                        <div class="border-l-4 border-amber-500 pl-4 py-1">
+                            <h3 class="font-bold text-slate-900">C, D, E. Contexto</h3>
+                            <p class="text-slate-600 mt-1">Síntomas presentes en primeras fases del desarrollo; causan deterioro clínico significativo; no se explican mejor por discapacidad intelectual.</p>
+                        </div>
+                        
+                        <div class="bg-slate-50 p-6 rounded-xl">
+                            <h4 class="font-semibold text-slate-800 mb-4">Niveles de Gravedad</h4>
+                            <div class="grid gap-4 text-sm">
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <strong class="block text-rose-600">Grado 3</strong>
+                                    Necesita ayuda muy notable.
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <strong class="block text-orange-600">Grado 2</strong>
+                                    Necesita ayuda notable.
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <strong class="block text-emerald-600">Grado 1</strong>
+                                    Necesita ayuda.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Reset Function
+        function handleReset() {
+            const hasData = Object.keys(responses).length > 0 || 
+                           patientInfo.name !== '' || 
+                           patientInfo.age !== '' || 
+                           patientInfo.evaluator !== '';
+            
+            if (hasData) {
+                const confirm = window.confirm(
+                    "¿Estás seguro de que deseas comenzar una nueva evaluación?\n\nSe perderán todos los datos ingresados y las respuestas marcadas actualmente."
+                );
+                if (!confirm) return;
+            }
+
+            responses = {};
+            patientInfo = {
+                name: '',
+                age: '',
+                gender: '',
+                evaluator: '',
+                date: new Date().toLocaleDateString('es-ES')
+            };
+            setActiveSection('introduction');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
