@@ -6,6 +6,7 @@
     <title>NeuroScreen Pro - Evaluación TEA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/recharts@3.4.1/umd/Recharts.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body {
@@ -123,141 +124,6 @@
             bottom: 1.5rem; /* Subir un poco la barra */
             height: auto;
         }
-        
-        /* Estilos para el gráfico mejorado */
-        .distribution-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-        
-        .category-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .category-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .category-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #1e293b;
-        }
-        
-        .category-score {
-            font-weight: 700;
-            font-size: 1.2rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            background: #f1f5f9;
-        }
-        
-        .subsection {
-            margin-bottom: 1rem;
-        }
-        
-        .subsection-header {
-            display: flex;
-            justify-content: between;
-            margin-bottom: 0.5rem;
-        }
-        
-        .subsection-name {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #475569;
-        }
-        
-        .subsection-count {
-            font-size: 0.85rem;
-            color: #64748b;
-        }
-        
-        .progress-container {
-            height: 10px;
-            background: #f1f5f9;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            border-radius: 5px;
-            transition: width 0.5s ease;
-        }
-        
-        .progress-0 { background: #10b981; } /* Verde - Bajo */
-        .progress-1 { background: #f59e0b; } /* Ámbar - Medio */
-        .progress-2 { background: #ef4444; } /* Rojo - Alto */
-        
-        .severity-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.25rem;
-        }
-        
-        .severity-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        
-        .severity-text {
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-        
-        .severity-0 { background: #10b981; }
-        .severity-1 { background: #f59e0b; }
-        .severity-2 { background: #ef4444; }
-        
-        .risk-summary {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        
-        .risk-item {
-            text-align: center;
-            padding: 1rem;
-            border-radius: 8px;
-            background: #f8fafc;
-        }
-        
-        .risk-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-        
-        .risk-label {
-            font-size: 0.8rem;
-            color: #64748b;
-        }
-        
-        .risk-low .risk-value { color: #10b981; }
-        .risk-medium .risk-value { color: #f59e0b; }
-        .risk-high .risk-value { color: #ef4444; }
-        
-        @media (max-width: 768px) {
-            .distribution-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .risk-summary {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -300,6 +166,8 @@
                         <!-- ACTUALIZADO: Encabezado cambiado -->
                         <h1 class="text-4xl font-bold text-slate-900 mb-3">Evaluación de Trastorno del Espectro Autista (TEA)</h1>
                         <p class="text-lg text-slate-600">Herramienta de cribado basada en los criterios del DSM-5</p>
+                        <!-- NUEVA LÍNEA SOLICITADA -->
+                        <p class="text-sm text-slate-500 mt-1">Desarrollado por el Dr. Nelson Ovalle Araujo - Pediatra</p>
                     </div>
 
                     <div class="grid md:grid-cols-3 gap-6 mb-8">
@@ -1234,139 +1102,6 @@
                 isComplete: socialMissingIds.length === 0 && behaviorMissingIds.length === 0
             };
         }
-        
-        // Función para calcular la distribución por subcategorías
-        function calculateDistribution() {
-            const socialSubsections = {};
-            const behaviorSubsections = {};
-            
-            // Inicializar contadores para las subcategorías sociales
-            SOCIAL_QUESTIONS.forEach(q => {
-                if (!socialSubsections[q.subsection]) {
-                    socialSubsections[q.subsection] = {
-                        total: 0,
-                        positive: 0,
-                        percentage: 0
-                    };
-                }
-                socialSubsections[q.subsection].total++;
-                if (responses[`social-${q.id}`] === 'yes') {
-                    socialSubsections[q.subsection].positive++;
-                }
-            });
-            
-            // Inicializar contadores para las subcategorías de comportamiento
-            BEHAVIOR_QUESTIONS.forEach(q => {
-                if (!behaviorSubsections[q.subsection]) {
-                    behaviorSubsections[q.subsection] = {
-                        total: 0,
-                        positive: 0,
-                        percentage: 0
-                    };
-                }
-                behaviorSubsections[q.subsection].total++;
-                if (responses[`behavior-${q.id}`] === 'yes') {
-                    behaviorSubsections[q.subsection].positive++;
-                }
-            });
-            
-            // Calcular porcentajes
-            Object.keys(socialSubsections).forEach(key => {
-                socialSubsections[key].percentage = Math.round((socialSubsections[key].positive / socialSubsections[key].total) * 100);
-            });
-            
-            Object.keys(behaviorSubsections).forEach(key => {
-                behaviorSubsections[key].percentage = Math.round((behaviorSubsections[key].positive / behaviorSubsections[key].total) * 100);
-            });
-            
-            return {
-                social: socialSubsections,
-                behavior: behaviorSubsections
-            };
-        }
-        
-        // Función para determinar la severidad basada en el porcentaje
-        function getSeverityLevel(percentage) {
-            if (percentage < 30) return 0; // Bajo
-            if (percentage < 60) return 1; // Medio
-            return 2; // Alto
-        }
-        
-        // Función para crear el gráfico de distribución mejorado
-        function createImprovedDistributionChart() {
-            const distribution = calculateDistribution();
-            
-            let socialHTML = '';
-            let behaviorHTML = '';
-            
-            // Generar HTML para las subcategorías sociales
-            Object.keys(distribution.social).forEach(subsection => {
-                const data = distribution.social[subsection];
-                const severity = getSeverityLevel(data.percentage);
-                
-                socialHTML += `
-                    <div class="subsection">
-                        <div class="subsection-header">
-                            <span class="subsection-name">${subsection}</span>
-                            <span class="subsection-count">${data.positive}/${data.total}</span>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-bar progress-${severity}" style="width: ${data.percentage}%"></div>
-                        </div>
-                        <div class="severity-indicator">
-                            <div class="severity-dot severity-${severity}"></div>
-                            <span class="severity-text">
-                                ${severity === 0 ? 'Baja afectación' : severity === 1 ? 'Afectación moderada' : 'Alta afectación'}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            // Generar HTML para las subcategorías de comportamiento
-            Object.keys(distribution.behavior).forEach(subsection => {
-                const data = distribution.behavior[subsection];
-                const severity = getSeverityLevel(data.percentage);
-                
-                behaviorHTML += `
-                    <div class="subsection">
-                        <div class="subsection-header">
-                            <span class="subsection-name">${subsection}</span>
-                            <span class="subsection-count">${data.positive}/${data.total}</span>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-bar progress-${severity}" style="width: ${data.percentage}%"></div>
-                        </div>
-                        <div class="severity-indicator">
-                            <div class="severity-dot severity-${severity}"></div>
-                            <span class="severity-text">
-                                ${severity === 0 ? 'Baja afectación' : severity === 1 ? 'Afectación moderada' : 'Alta afectación'}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            return `
-                <div class="distribution-container">
-                    <div class="category-card">
-                        <div class="category-header">
-                            <span class="category-title">Comunicación Social</span>
-                            <span class="category-score">${Object.values(distribution.social).reduce((sum, item) => sum + item.positive, 0)}/15</span>
-                        </div>
-                        ${socialHTML}
-                    </div>
-                    
-                    <div class="category-card">
-                        <div class="category-header">
-                            <span class="category-title">Patrones Restrictivos y Repetitivos</span>
-                            <span class="category-score">${Object.values(distribution.behavior).reduce((sum, item) => sum + item.positive, 0)}/20</span>
-                        </div>
-                        ${behaviorHTML}
-                    </div>
-                </div>
-            `;
-        }
 
         function renderResults() {
             const risk = calculateRiskAssessment();
@@ -1445,35 +1180,17 @@
                             </div>
                         </div>
 
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
                             <h3 class="text-lg font-semibold text-slate-800 mb-6">Distribución de Síntomas</h3>
-                            ${risk.isComplete ? createImprovedDistributionChart() : `
-                                <div class="h-64 w-full flex items-center justify-center bg-slate-50 rounded-lg">
-                                    <div class="text-center text-slate-500">
-                                        <i class="fas fa-chart-bar text-4xl mb-2"></i>
-                                        <p>Complete la evaluación para ver el análisis</p>
-                                    </div>
+                            <div class="h-64 w-full flex items-center justify-center bg-slate-50 rounded-lg">
+                                <div class="text-center text-slate-500">
+                                    <i class="fas fa-chart-pie text-4xl mb-2"></i>
+                                    <p>Gráfico de distribución</p>
+                                    <p class="text-sm">(En una implementación completa, se mostraría un gráfico real)</p>
                                 </div>
-                            `}
+                            </div>
                         </div>
                     </div>
-
-                    ${risk.isComplete ? `
-                        <div class="risk-summary mb-8">
-                            <div class="risk-item risk-low">
-                                <div class="risk-value">${Object.values(calculateDistribution().social).filter(item => getSeverityLevel(item.percentage) === 0).length}</div>
-                                <div class="risk-label">Áreas con baja afectación</div>
-                            </div>
-                            <div class="risk-item risk-medium">
-                                <div class="risk-value">${Object.values(calculateDistribution().social).filter(item => getSeverityLevel(item.percentage) === 1).length + Object.values(calculateDistribution().behavior).filter(item => getSeverityLevel(item.percentage) === 1).length}</div>
-                                <div class="risk-label">Áreas con afectación moderada</div>
-                            </div>
-                            <div class="risk-item risk-high">
-                                <div class="risk-value">${Object.values(calculateDistribution().behavior).filter(item => getSeverityLevel(item.percentage) === 2).length}</div>
-                                <div class="risk-label">Áreas con alta afectación</div>
-                            </div>
-                        </div>
-                    ` : ''}
 
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
                         <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
